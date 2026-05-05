@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Счётчик | Экстремальные значения</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        /* Фон с линейным градиентом */
+        body {
+            min-height: 100vh;
+            background: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* Карточка с центровкой */
+        .counter-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 48px;
+            padding: 40px 35px;
+            width: 100%;
+            max-width: 520px;
+            text-align: center;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .counter-container h2 {
+            color: white;
+            font-weight: 500;
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+            letter-spacing: 1px;
+        }
+
+        /* Окошко результата */
+        .result-window {
+            font-size: 5rem;
+            font-weight: 800;
+            font-family: 'Courier New', 'Fira Code', monospace;
+            padding: 30px 20px;
+            margin: 20px 0 35px;
+            border-radius: 25px;
+            background-color: #e63946; /* Стартовый красный (0) */
+            color: #1e1e1e;
+            transition: background-color 0.2s ease;
+            box-shadow: inset 0 3px 8px rgba(0,0,0,0.15), 0 8px 20px rgba(0,0,0,0.3);
+            letter-spacing: 4px;
+        }
+
+        /* Блок кнопок */
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        /* Стиль кнопок: скругление 5px, фон-градиент */
+        .btn {
+            font-size: 2rem;
+            font-weight: bold;
+            padding: 14px 28px;
+            min-width: 130px;
+            border: none;
+            border-radius: 5px;  /* радиальное скругление 5px */
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            color: white;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+        }
+
+        /* Кнопка минус — градиент */
+        .btn-minus {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 6px 0 #a13e4b;
+        }
+
+        /* Кнопка плюс — градиент */
+        .btn-plus {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            box-shadow: 0 6px 0 #0f7b8c;
+        }
+
+        .btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 3px 0 #666;
+        }
+
+        /* Неактивные кнопки */
+        .btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: translateY(0);
+            box-shadow: 0 6px 0 #666;
+            background: linear-gradient(135deg, #999, #666);
+        }
+
+        /* Дополнительное окно для экстремальных значений */
+        .extreme-box {
+            margin-top: 15px;
+            padding: 16px 20px;
+            border-radius: 40px;
+            background: rgba(0, 0, 0, 0.7);
+            min-height: 75px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            border: 1px solid rgba(255,215,0,0.4);
+        }
+
+        .extreme-message {
+            background: linear-gradient(135deg, #ffd89b, #c7e9fb);
+            color: #1e1e2a;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+            box-shadow: 0 0 12px rgba(255,200,0,0.7);
+            display: inline-block;
+        }
+
+        /* Декоративный текст */
+        .info-text {
+            margin-top: 20px;
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.5);
+        }
+
+        /* Адаптив */
+        @media (max-width: 480px) {
+            .counter-container {
+                padding: 25px 20px;
+            }
+            .result-window {
+                font-size: 3.5rem;
+                padding: 20px;
+            }
+            .btn {
+                font-size: 1.5rem;
+                padding: 10px 18px;
+                min-width: 100px;
+            }
+            .buttons {
+                gap: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="counter-container">
+        <h2>⚡ ИНТЕРАКТИВНЫЙ СЧЁТЧИК ⚡</h2>
+
+        <!-- Окошко результата -->
+        <div class="result-window" id="counterValue">0</div>
+
+        <!-- Кнопки управления -->
+        <div class="buttons">
+            <button class="btn btn-minus" id="minusBtn">− МИНУС</button>
+            <button class="btn btn-plus" id="plusBtn">ПЛЮС +</button>
+        </div>
+
+        <!-- Дополнительное окно для сообщения -->
+        <div class="extreme-box" id="extremeMessage"></div>
+        
+        <div class="info-text">
+            🔹 Диапазон: от -10 до +10 🔹 При достижении ±10 — блокировка и сообщение
+        </div>
+    </div>
+
+    <script>
+        // ========== 1. Получаем элементы DOM ==========
+        const counterDisplay = document.getElementById('counterValue');   // окошко результата
+        const minusButton = document.getElementById('minusBtn');         // кнопка минус
+        const plusButton = document.getElementById('plusBtn');           // кнопка плюс
+        const extremeMessageDiv = document.getElementById('extremeMessage'); // доп. окно
+
+        // ========== 2. Начальное состояние счётчика ==========
+        let currentValue = 0;   // старт с нуля
+
+        // ========== 3. Функция обновления интерфейса ==========
+        function updateUI() {
+            // 3.1 Обновляем текст в окошке
+            counterDisplay.textContent = currentValue;
+
+            // 3.2 Меняем фон окна результата:
+            //     положительные → жёлтый, отрицательные → зелёный, ноль → красный
+            if (currentValue > 0) {
+                counterDisplay.style.backgroundColor = '#FFD966';   // жёлтый
+                counterDisplay.style.color = '#2c2c2c';
+            } else if (currentValue < 0) {
+                counterDisplay.style.backgroundColor = '#6fbf4c';   // зелёный
+                counterDisplay.style.color = '#ffffff';
+            } else { // currentValue === 0
+                counterDisplay.style.backgroundColor = '#e63946';   // красный
+                counterDisplay.style.color = '#ffffff';
+            }
+
+            // 3.3 Блокировка / разблокировка кнопок при достижении пределов
+            // Достигли 10 → плюс неактивна
+            if (currentValue >= 10) {
+                plusButton.disabled = true;
+            } else {
+                plusButton.disabled = false;
+            }
+
+            // Достигли -10 → минус неактивна
+            if (currentValue <= -10) {
+                minusButton.disabled = true;
+            } else {
+                minusButton.disabled = false;
+            }
+
+            // 3.4 Дополнительное окно: при значении 10 или -10 показываем надпись
+            if (currentValue === 10 || currentValue === -10) {
+                extremeMessageDiv.innerHTML = '<div class="extreme-message">⚠️ ВЫ ДОСТИГЛИ ЭКСТРЕМАЛЬНОГО ЗНАЧЕНИЯ ⚠️</div>';
+            } else {
+                extremeMessageDiv.innerHTML = '';   // очищаем окно при обычных значениях
+            }
+        }
+
+        // ========== 4. Логика увеличения (плюс) ==========
+        function increment() {
+            // Защита от превышения 10
+            if (currentValue >= 10) return;
+            currentValue++;
+            updateUI();
+        }
+
+        // ========== 5. Логика уменьшения (минус) ==========
+        function decrement() {
+            // Защита от ухода ниже -10
+            if (currentValue <= -10) return;
+            currentValue--;
+            updateUI();
+        }
+
+        // ========== 6. Назначение слушателей событий (ванильный JS) ==========
+        plusButton.addEventListener('click', increment);
+        minusButton.addEventListener('click', decrement);
+
+        // ========== 7. Инициализация интерфейса при загрузке ==========
+        updateUI();
+
+        // Дополнительно: выводим в консоль информацию для проверки (необязательно)
+        console.log('✅ Счётчик запущен. Диапазон [-10, 10]. Цвета: >0 жёлтый, <0 зелёный, 0 красный.');
+        console.log('🎯 При достижении ±10 кнопка блокируется и появляется сообщение.');
+    </script>
+</body>
+</html>
